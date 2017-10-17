@@ -20,14 +20,54 @@ ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '../..')
 # Root directory of the project (abs path).
 PROJECT_ROOT = os.path.abspath(ROOT_FOLDER)
 
-# Files for the NuttX/TizenRT measurement.
+API_PATH = os.path.join(PROJECT_ROOT, 'API')
+
+TESTRUNNER_PATH = os.path.join(API_PATH, 'test_runner')
+
+BUILDER_PATH = os.path.join(API_PATH, 'builder')
+
+RESOURCES_JSON = os.path.join(BUILDER_PATH, 'resources.json')
+
+RESOURCES_PATH = os.path.join(BUILDER_PATH, 'resources')
+
+DEPS_PATH = os.path.join(PROJECT_ROOT, 'deps')
+
+PATCHES_PATH = os.path.join(BUILDER_PATH, 'patches')
+
+BUILD_PATH = os.path.join(PROJECT_ROOT, 'build')
+
+BUILD_NUTTX_PATH = os.path.join(BUILD_PATH, 'nuttx')
+
+BUILD_NUTTX_TEST_PATH = os.path.join(BUILD_NUTTX_PATH, 'test')
+
+BUILD_RPI2_PATH = os.path.join(BUILD_PATH, 'rpi2/')
+
+BUILD_RPI2_TEST_PATH = os.path.join(BUILD_RPI2_PATH, 'test')
+
+BUILD_TIZENRT_PATH = os.path.join(BUILD_PATH, 'tizenrt')
+
+BUILD_TEST_PATH = os.path.join(BUILD_PATH, 'test')
+
+NUTTX_TEST_IMAGE = os.path.join(BUILD_NUTTX_PATH, 'nuttx.bin')
+
+FREYA_CONFIG = os.path.join(RESOURCES_PATH, 'iotjs-freya.config')
+
+FREYA_TESTER = os.path.join(RESOURCES_PATH, 'tester.py')
+
+
+
+#
+# ================================
+#
+
+# Path to the config folder.
 CONFIG_PATH = os.path.join(PROJECT_ROOT, 'config')
 
 # Folder where the submodules can be found.
 PROJECTS_ROOT = os.path.join(PROJECT_ROOT, 'projects')
 
 # Folder where the necessary patch files can be found.
-PATCHES_PATH = os.path.join(PROJECT_ROOT, 'patches')
+#PATCHES_PATH = os.path.join(PROJECT_ROOT, 'patches')
 
 # Folder where the results can be found.
 OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'results')
@@ -36,7 +76,7 @@ OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'results')
 TOOLS_PATH = os.path.join(PROJECT_ROOT, 'tools')
 
 # Files for the RPi2 measurement.
-RESOURCES_PATH = os.path.join(PROJECT_ROOT, 'resources')
+#RESOURCES_PATH = os.path.join(PROJECT_ROOT, 'resources')
 
 #
 # ================ Web related projects ================
@@ -75,14 +115,6 @@ IOTJS_TARGET_MAP_FILE_PATH = os.path.join(IOTJS_MAP_DIR_PATH, 'target_profile.ma
 IOTJS_BUILD_STACK_DIR = os.path.join(IOTJS_PATH, 'build_stack')
 
 IOTJS_BUILD_STACK_PATH = os.path.join(IOTJS_BUILD_STACK_DIR, 'arm-linux/%s/bin/')
-
-#
-# ================ Stlink ================
-#
-
-STLINK_PATH = os.path.join(PROJECTS_ROOT, 'stlink')
-
-STLINK_BUILD_PATH = os.path.join(STLINK_PATH, 'build/Release/')
 
 #
 # ================ NuttX ================

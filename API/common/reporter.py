@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import console
 
 
@@ -46,6 +44,24 @@ def report_skip(test, reason):
 def report_start():
     console.log()
     console.log('Remote testing has been started')
+
+
+def report_configuration(env):
+    info = env['info']
+
+    console.log()
+    console.log("Test configuration:")
+    console.log("  app:                %s" % info['app'])
+    console.log("  device:             %s" % info['device'])
+    console.log("  timeout:            %s sec" % info['timeout'])
+
+    if info['device'] == "rpi2":
+        console.log("  address:            %s" % info['address'])
+        console.log("  username:           %s" % info['username'])
+        console.log("  remote workdir:     %s" % info['remote_path'])
+    elif info['device'] in ["stm32f4dis", "artik053"]:
+        console.log("  port:               %s" % info['port'])
+        console.log("  baud:               %d" % info['baud'])
 
 
 def report_final(testresults):

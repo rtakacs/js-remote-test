@@ -1,13 +1,13 @@
 # Copyright 2017-present Samsung Electronics Co., Ltd. and other contributors
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS
+# distributed under the License is distributed on an 'AS IS' BASIS
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -19,17 +19,17 @@ import xmodem
 from API.common import utils
 
 
-class Connection(object):
+class SerialConnection(object):
     '''
     The serial communication wrapper.
     '''
-    def __init__(self, options, prompt):
-        self.port = options.port
-        self.baud = options.baud
-        self.timeout = options.timeout
+    def __init__(self, device_info):
+        self.port = device_info['port']
+        self.baud = device_info['baud']
+        self.timeout = device_info['timeout']
 
         # Defines the end of the stdout.
-        self.prompt = prompt
+        self.prompt = device_info['prompt']
 
     def get_prompt(self):
         '''
@@ -52,7 +52,7 @@ class Connection(object):
 
     def getc(self, size, timeout=1):
         '''
-        Receive data from the serial port.
+        Recevice data from the serial port.
         '''
         time.sleep(2)
 
@@ -63,7 +63,7 @@ class Connection(object):
         Send data to the serial port.
         '''
         if isinstance(data, unicode):
-            data = data.encode("utf8")
+            data = data.encode('utf8')
 
         return self.serial.write(data)
 
@@ -78,7 +78,7 @@ class Connection(object):
         Send command over the serial port.
         '''
         if isinstance(cmd, unicode):
-            cmd = cmd.encode("utf8")
+            cmd = cmd.encode('utf8')
 
         self.serial.write(cmd + '\n')
 
@@ -86,7 +86,7 @@ class Connection(object):
 
         # Throw exception when timeout happens.
         if self.prompt not in receive:
-            raise utils.TimeoutException
+            raise TimeoutException
 
         # Note: since the received data format is
         #
@@ -108,7 +108,8 @@ class Connection(object):
                     if line[-len(stdout):] == stdout:
                         return stdout, bytes(line)
             else:
-                raise utils.TimeoutException
+                # raise utils.TimeoutException
+                raise Exception('use TimeoutException')
 
         return False, False
 
