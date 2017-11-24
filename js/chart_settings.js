@@ -40,7 +40,7 @@ function generate_chart(data, type, y_axis_min) {
 
   if (type === 'memory') {
     var type_key = 'average_memory';
-    var label_name = 'average memory (KB)';
+    var label_name = 'average memory consumption';
 
     var typedData = {
       json: data,
@@ -65,8 +65,8 @@ function generate_chart(data, type, y_axis_min) {
     var target_profile = 'bin.target_profile.total';
     var minimal_profile = 'bin.minimal_profile.total';
 
-    var label_name_first = 'target-profile binary size (KB)';
-    var label_name_second = 'minimal-profile binary size (KB)';
+    var label_name_first = 'target-profile binary size';
+    var label_name_second = 'minimal-profile binary size';
     console.log(data)
     var typedData = {
       json: data,
@@ -123,17 +123,15 @@ function generate_chart(data, type, y_axis_min) {
           '<tr class="c3-tooltip-name--binary">' +
             '<td class="name">' +
               '<span style="background-color: ' + color(d[0]) + '"></span>' +
-              d[0].name +
             '</td>' +
-            '<td class="value">' + ((d[0].value === null) ? 'N/A' : d[0].value) + '</td>' +
+            '<td class="value">' + ((d[0].value === null) ? 'N/A' : d[0].value.toFixed(1)) + ' KB</td>' +
           '</tr>';
           if (type === 'binary') {
             tt += '<tr class="c3-tooltip-name--binary">' +
             '<td class="name">' +
-              '<span style="background-color: ' + color(d[1]) + '"></span>' +
-              d[1].name +
+              '<span style="background-color: ' + color(d[1]) + '"></span>'+
             '</td>' +
-            '<td class="value">' + ((d[1].value === null) ? 'N/A' : d[1].value) + '</td>' +
+            '<td class="value">' + ((d[1].value === null) ? 'N/A' : d[1].value.toFixed(1)) + ' KB</td>' +
           '</tr>';
           }
           tt += '<tr class="c3-tooltip-name--commit">' +
@@ -203,11 +201,11 @@ function update_chart(from, to) {
 
       var bin_target_total = parseInt(Number(data.bin.target_profile.total));
       // Convert it to kilobytes
-      data.bin.target_profile.total = (bin_target_total / 1024).toFixed();
+      data.bin.target_profile.total = (bin_target_total / 1024).toFixed(1);
 
       var bin_minimal_total = parseInt(Number(data.bin.minimal_profile.total));
       // Convert it to kilobytes
-      data.bin.minimal_profile.total = (bin_minimal_total / 1024).toFixed();
+      data.bin.minimal_profile.total = (bin_minimal_total / 1024).toFixed(1);
 
       data.tests.forEach(function(testname) {
         if (testname.hasOwnProperty('memory')) {
@@ -223,7 +221,7 @@ function update_chart(from, to) {
       if (memory_counter > 0) {
         data.average_memory = average_memory / memory_counter;
         // Convert it to kilobytes
-        data.average_memory = (data.average_memory / 1024).toFixed();
+        data.average_memory = (data.average_memory / 1024).toFixed(1);
 
         if (min_avg_memory == 0 || min_avg_memory > data.average_memory) {
           min_avg_memory = data.average_memory;

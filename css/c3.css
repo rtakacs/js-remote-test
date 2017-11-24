@@ -102,7 +102,7 @@
 /*-- Tooltip --*/
 .c3-tooltip-container {
   z-index: 10;
-  width: 200px !important;
+  min-width: 250px !important;
  }
 
 .c3-tooltip {
@@ -138,7 +138,10 @@
   margin-right: 6px; }
 
 .c3-tooltip td.value {
-  text-align: right; }
+  white-space: nowrap;
+  text-align: right;
+  font-family: monospace;
+}
 
 /*-- Area --*/
 .c3-area {
