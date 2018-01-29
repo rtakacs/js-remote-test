@@ -50,25 +50,23 @@ class BuilderBase(object):
         if info['no_build']:
             return
 
-        self._build('target', info['build-path'], extra_flags=True)
+        self._build('target', info['build-path'], use_extra_flags=True)
 
-    def _build_application(self, target, extra_flags):
+    def _build_application(self, profile, use_extra_flags):
         '''
         Build IoT.js or JerryScript applications.
         '''
         application = self.env['modules']['app']
 
-        build_options = {
-            'iotjs': self._iotjs_build_options(target),
-            'jerryscript': self._jerryscript_build_options(target)
+        builders = {
+            'iotjs': self._build_iotjs,
+            'jerryscript': self._build_jerryscript
         }
 
-        build_flags = build_options.get(application['name'])
-        # Skip the build if there are no build flags provided.
-        if not build_flags:
-            return
+        extra_flags = []
         # Append extra-flags that are defined in the resources.json file.
-        if extra_flags:
-            build_flags += application['extra-build-flags'][self.device]
+        if use_extra_flags:
+            extra_flags = application['extra-build-flags'][self.device]
 
-        utils.execute(application['src'], 'tools/build.py', build_flags)
+        builder = builders.get(application['name'])
+        builder(profile, extra_flags)

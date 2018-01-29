@@ -23,14 +23,14 @@ class STM32F4Builder(builder.BuilderBase):
     def __init__(self, options):
         super(self.__class__, self).__init__(options)
 
-    def _build(self, profile, builddir, extra_flags=False):
+    def _build(self, profile, builddir, use_extra_flags=False):
         '''
         Main method to build all the dependencies of the target.
         '''
         nuttx = self.env['modules']['nuttx']
 
         self.prebuild_nuttx()
-        self.build_application(profile, extra_flags)
+        self.build_application(profile, use_extra_flags)
         self.build_nuttx()
         self.build_stlink()
 
@@ -72,7 +72,7 @@ class STM32F4Builder(builder.BuilderBase):
 
         utils.execute(stlink['src'], 'make', ['release'])
 
-    def _jerryscript_build_options(self, profile):
+    def _build_jerryscript(self, profile):
         '''
         Collect build-flags for JerryScript.
         '''
@@ -95,14 +95,14 @@ class STM32F4Builder(builder.BuilderBase):
             '--profile=%s' % profiles[profile],
             '--toolchain=%s' % jerry['paths']['stm32f4dis-toolchain'],
             '--compile-flag=--sysroot=%s' % nuttx['src']
-        ]
+        ] + extra_flags
 
         # NuttX requires the path of the used JerryScript folder.
         utils.define_environment('JERRYSCRIPT_ROOT_DIR', jerry['src'])
 
-        return build_flags
+        utils.execute(jerry['src'], 'tools/build.py', build_flags)
 
-    def _iotjs_build_options(self, profile):
+    def _build_iotjs(self, profile, extra_flags):
         '''
         Build IoT.js for NuttX target.
         '''
@@ -125,9 +125,9 @@ class STM32F4Builder(builder.BuilderBase):
             '--profile=%s' % profiles[profile],
             '--buildtype=%s' % self.buildtype,
             '--nuttx-home=%s' % nuttx['src']
-        ]
+        ] + extra_flags
 
         # NuttX requires the path of the used IoT.js folder.
         utils.define_environment('IOTJS_ROOT_DIR', iotjs['src'])
 
-        return build_flags
+        utils.execute(iotjs['src'], 'tools/build.py', build_flags)

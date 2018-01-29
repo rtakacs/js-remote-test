@@ -22,14 +22,14 @@ class ARTIK053Builder(builder.BuilderBase):
     def __init__(self, options):
         super(self.__class__, self).__init__(options)
 
-    def _build(self, profile, builddir, extra_flags=False):
+    def _build(self, profile, builddir, use_extra_flags=False):
         '''
         Main method to build the target.
         '''
         tizenrt = env['modules']['tizenrt']
 
         self._prebuild_tizenrt()
-        self._build_application(profile, extra_flags)
+        self._build_application(profile, use_extra_flags)
         self._build_tizenrt()
 
         # Copy the linker map file and the image to the build folder.
@@ -55,7 +55,7 @@ class ARTIK053Builder(builder.BuilderBase):
 
         utils.execute(tizenrt['paths']['os'], 'make', ['-j1'])
 
-    def _jerryscript_build_options(self, profile):
+    def _build_jerryscript(self, profile, extra_flags):
         '''
         Collect build-flags for JerryScript.
         '''
@@ -78,14 +78,14 @@ class ARTIK053Builder(builder.BuilderBase):
             '--profile=%s' % profiles[profile],
             '--toolchain=%s' % jerry['paths']['artik053-toolchain'],
             '--compile-flag=--sysroot=%s' % tizenrt['paths']['os']
-        ]
+        ] + extra_flags
 
         # TizenRT requires the path of the used JerryScript folder.
         utils.define_environment('JERRYSCRIPT_ROOT_DIR', jerry['src'])
 
-        return build_flags
+        utils.execute(jerry['src'], 'tools/build.py', build_flags)
 
-    def _iotjs_build_options(self, profile):
+    def _build_iotjs(self, profile, extra_flags):
         '''
         Build IoT.js for TizenRT target.
         '''
@@ -105,7 +105,7 @@ class ARTIK053Builder(builder.BuilderBase):
             '--target-board=artik05x',
             '--profile=%s' % profiles[profile],
             '--buildtype=%s' % self.buildtype,
-        ]
+        ] + extra_flags
 
         iotjs_build_options = ' '.join(build_flags)
         # Note: these values should be defined for TizenRT, because
@@ -114,7 +114,3 @@ class ARTIK053Builder(builder.BuilderBase):
 
         # TizenRT requires the path of the used IoT.js folder.
         utils.define_environment('IOTJS_ROOT_DIR', iotjs['src'])
-
-        # Since TizenRT will build IoT.js, the return value is simply `None`
-        # that can indicate for the system to skip building IoT.js manually.
-        return None

@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from API.builder import targets
-from API.common import paths
-from API.common import utils
+from API.common import paths, utils
 
 
 def load_testing_environment(options):
@@ -119,72 +117,3 @@ def patch_modules(env, revert=False):
             # Patch the module if no submodule provided.
             project = patch.get('submodule', module['src'])
             utils.patch(project, patch['file'], revert)
-
-
-def create_profile_binaries(env, target):
-    '''
-    Create profile builds for binary size measurement.
-    '''
-    if env['info']['no_profile_build']:
-        return
-
-    target.build_target(env, 'minimal', env['paths']['build-minimal'])
-    target.build_target(env, 'target', env['paths']['build-target'])
-
-
-def create_test_binary(env, target):
-    '''
-    Create the main build that is used for testing.
-    '''
-    build_path = env['paths']['build']
-    test_files = env['paths']['build-test']
-
-    app = env['modules']['app']
-    # Copy all the tests into the build folder.
-    utils.copy(app['paths']['tests'], test_files)
-
-    target.append_files(env)
-    target.build_target(env, 'target', build_path, use_extra_flags=True)
-
-
-def build_deps(env, target):
-    '''
-    Steps for building all the necessary modules.
-    '''
-    if env['info']['no_build']:
-        return
-
-    fetch_modules(env)
-
-    config_modules(env)
-
-    create_profile_binaries(env, target)
-
-    patch_modules(env)
-
-    create_test_binary(env, target)
-
-    patch_modules(env, revert=True)
-
-    # Save binary sizes and repository info.
-    utils.create_build_info(env)
-
-
-def flash_device(env, target):
-    '''
-    Flash the appropriate device.
-    '''
-    if env['info']['no_flash']:
-        return
-
-    target.flash_device(env)
-
-
-def initialize(env):
-    '''
-    Initialize the testing environment.
-    '''
-    target = targets.create(env)
-
-    build_deps(env, target)
-    flash_device(env, target)

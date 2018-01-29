@@ -22,13 +22,13 @@ class RPi2Builder(builder.BuilderBase):
     def __init__(self, options):
         super(self.__class__, self).__init__(options)
 
-    def _build(self, profile, builddir, extra_flags=False):
+    def _build(self, profile, builddir, use_extra_flags=False):
         '''
         Main method to build the target.
         '''
         application = env['modules']['app']
 
-        self._build_application(profile, extra_flags)
+        self._build_application(profile, use_extra_flags)
         self._build_freya()
 
         # Copy the linker map file and the image to the build folder.
@@ -78,7 +78,7 @@ class RPi2Builder(builder.BuilderBase):
 
             utils.copy(src, dst)
 
-    def _jerryscript_build_options(self, profile):
+    def _build_jerryscript(self, profile, extra_flags):
         '''
         Collect build-flags for JerryScript.
         '''
@@ -94,11 +94,11 @@ class RPi2Builder(builder.BuilderBase):
             '--toolchain=cmake/toolchain_linux_armv7l.cmake',
             '--linker-flag=-Wl,-Map=linker.map',
             '--profile=%s' % profiles[profile]
-        ]
+        ] + extra_flags
 
-        return build_flags
+        utils.execute(jerry['src'], 'tools/build.py', build_flags)
 
-    def _iotjs_build_options(self, profile):
+    def _build_iotjs(self, profile, extra_flags):
         '''
         Build IoT.js for NuttX target.
         '''
@@ -118,6 +118,6 @@ class RPi2Builder(builder.BuilderBase):
             '--target-board=rpi2',
             '--profile=%s' % profiles[profile],
             '--buildtype=%s' % self.buildtype
-        ]
+        ] + extra_flags
 
-        return build_flags
+        utils.execute(iotjs['src'], 'tools/build.py', build_flags)

@@ -26,9 +26,9 @@ TESTRUNNER_PATH = os.path.join(API_PATH, 'test_runner')
 
 BUILDER_PATH = os.path.join(API_PATH, 'builder')
 
-RESOURCES_JSON = os.path.join(BUILDER_PATH, 'resources.json')
+RESOURCES_PATH = os.path.join(API_PATH, 'resources')
 
-RESOURCES_PATH = os.path.join(BUILDER_PATH, 'resources')
+RESOURCES_JSON = os.path.join(RESOURCES_PATH, 'resources.json')
 
 DEPS_PATH = os.path.join(PROJECT_ROOT, 'deps')
 

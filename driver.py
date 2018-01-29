@@ -16,7 +16,9 @@
 
 import argparse
 
-from API.builder import environment
+import API.builder
+
+from API.resources import resource_handler
 from API.test_runner import TestRunner
 
 
@@ -99,10 +101,17 @@ def main():
     '''
     options = parse_options()
 
+    # Get an environment object that holds all the necessary
+    # information for the build and the test.
+    env = resource_handler.load_testing_environment(options)
+    resource_handler.fetch_modules(env)
+    resource_handler.config_modules(env)
+
     # Initialize the testing environment by building all the
-    # required modules and flashing the device.
-    env = environment.load_testing_environment(options)
-    environment.initialize(env)
+    # required modules to be ready to run tests.
+    target_builder = builder.create(env)
+    target_builder.create_profile_builds()
+    target_builder.cteate_test_build()
 
     # Run all the tests.
     testrunner = TestRunner(env)
