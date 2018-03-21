@@ -37,7 +37,7 @@ class SSHConnection(object):
         '''
         Open the serial port.
         '''
-        self.ssh.connect(self.address, username=self.username)
+        self.ssh.connect(self.address, port=9983, username=self.username)
 
     def close(self):
         '''

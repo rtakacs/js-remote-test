@@ -76,11 +76,14 @@ class ARTIK530Device(object):
         # Copy all the tests into the build folder.
         utils.copy(test_src, test_dst)
         utils.copy(paths.SIMPLE_TESTER, build_path)
+        utils.copy(paths.FREYA_CONFIG, build_path)
+        utils.copy(paths.FREYA_TESTER, build_path)
 
         # 2. Deploy the build folder to the device.
-        self.login()
-        self.channel.exec_command('mount -o remount,rw /')
-        rsync_flags = ['--recursive', '--compress', '--delete']
+        #self.login()
+
+        #self.channel.exec_command('mount -o remount,rw /')
+        rsync_flags = ['-e', '\'ssh -p 9983\'', '--recursive', '--compress', '--delete']
 
         # Note: slash character is required after the path.
         # In this case `rsync` copies the whole folder, not
@@ -91,6 +94,7 @@ class ARTIK530Device(object):
         utils.execute('.', 'rsync', rsync_flags + [src, dst])
 
         # 3. Install rpm package
+        self.login()
         template = 'rpm -ivh --force --nodeps %s/%s-1.0.0-0.armv7l.rpm'
         self.channel.exec_command(template % (self.workdir, self.app))
 
@@ -114,21 +118,29 @@ class ARTIK530Device(object):
         '''
         self.login()
 
-        template = 'python3 %s/simpletester.py --cwd %s --cmd %s --testfile %s'
+        template = 'python3 %s/tester.py --cwd %s --cmd %s --testfile %s'
         # Absolute path to the test folder.
         testdir = '%s/test' % self.workdir
         # Absolute path to the test file.
         testfile = '%s/%s/%s' % (testdir, testset, test['name'])
+        # Absolute path to the application.
+        apps = {
+            'iotjs': '%s/iotjs' % self.workdir,
+            'jerryscript': '%s/jerry' % self.workdir
+        }
 
         # Create the command that the device will execute.
-        command = template % (self.workdir, testdir, self.app, testfile)
+        command = template % (self.workdir, testdir, apps[self.app], testfile)
 
+        print command
         stdout = self.channel.exec_command(command)
+        print stdout
 
         # Since the stdout is a JSON text, parse it.
         result = json.loads(stdout)
+
         # Make HTML friendly stdout.
-        result['output'] = result['output'].rstrip('\n').replace('\n', '<br>')
+        result['output'] = result['output'].decode('UTF-8', 'ignore').rstrip('\n').replace('\\\\n', '<br>')
 
         self.logout()
 

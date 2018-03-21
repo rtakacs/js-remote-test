@@ -85,7 +85,7 @@ def execute(cwd, cmd, args=[]):
     output = process.communicate()[0]
     exitcode = process.returncode
 
-    return output, exitcode
+    return output.decode('utf-8'), exitcode
 
 
 def process_freya_output():
