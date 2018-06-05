@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from API import resources
-from API.common import utils
+from API.common import utils, paths
 
 
 class BuilderBase(object):
@@ -28,75 +28,48 @@ class BuilderBase(object):
         resources.fetch_modules(self.env)
         resources.config_modules(self.env)
 
-    def create_profile_builds(self):
+    def build(self, command):
         '''
-        Build IoT.js and JerryScript on different profiles.
-
-        Note: this step is only for binary size measurement.
         '''
-        info = self.env['info']
-        paths = self.env['paths']
+        cwd = command.get('cwd', '.')
+        cmd = command.get('cmd')
+        args = command.get('args', [])
+        env = command.get('env', {})
 
-        if info['no_build'] or info['no_profile_build']:
-            return
+        # Get the conditional options and appens their data to
+        # the appropriate place.
+        for i in command.get('conditional-options', []):
+            if eval(i.get('condition')):
+                args.extend(i.get('args', []))
+                utils.merge_dicts(env, i.get('env', {}))
 
-        self._build('minimal', paths['build-minimal'])
-        self._build('target', paths['build-target'])
+        utils.execute(cwd, cmd, args=args, env=env)
 
-        utils.create_build_info(self.env)
-
-    def create_test_build(self):
+    def build_modules(self):
         '''
-        Build IoT.js and JerryScript on different profiles.
+        Build all the modules.
         '''
-        info = self.env['info']
-        paths = self.env['paths']
+        configs = {}
 
-        if info['no_build']:
-            return
+        # In the first step, just open and save all the contents
+        # that the build requires.
+        for name in self.env['deps']:
+            print name
+            filename = utils.join(paths.BUILDER_PATH, '%s.build.config' % name)
+            jsondata = utils.read_json_file(filename)
+            # Save the content that belongs to the appropriate device.
+            commands = jsondata[self.env['info']['device']]
+            configs[name] = commands
 
-        # Apply patches.
-        resources.patch_modules(self.env)
+            # Initialize all the modules.
+            for command in commands.get('init', []):
+                self.build(command)
 
-        self._build('target', paths['build'], use_extra_flags=True)
+        # Loop on the saved build configurations and build the modules.
+        for config in configs.values():
+            print config
+            self.build(config.get('build'))
 
-        # Clean up the patches.
-        resources.patch_modules(self.env, revert=True)
-
-    def _build_application(self, profile, use_extra_flags):
-        '''
-        Build IoT.js or JerryScript applications.
-        '''
-        application = self.env['modules']['app']
-        device = self.env['info']['device']
-
-        builders = {
-            'iotjs': self._build_iotjs,
-            'jerryscript': self._build_jerryscript
-        }
-
-        extra_flags = []
-        # Append extra-flags that are defined in the resources.json file.
-        if use_extra_flags:
-            if not self.env['info']['no_memstat']:
-                extra_flags = application['extra-build-flags'][device]
-
-            if self.env['info']['coverage']:
-                extra_flags.append('--jerry-debugger')
-                extra_flags.append('--no-snapshot')
-
-        builder = builders.get(application['name'])
-        builder(profile, extra_flags)
-
-    def _copy_build_files(self, target_module, builddir):
-        '''
-        Copy the created binaries, libs, linker map to the build folder.
-        '''
-        application = self.env['modules']['app']
-
-        linker_map = utils.join(builddir, 'linker.map')
-        lib_folder = utils.join(builddir, 'libs')
-
-        utils.copy(application['paths']['libdir'], lib_folder)
-        utils.copy(target_module['paths']['linker-map'], linker_map)
-        utils.copy(target_module['paths']['image'], builddir)
+            # Install the components.
+            for command in config.get('install', []):
+                self.build(command)

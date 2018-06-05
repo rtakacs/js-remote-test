@@ -47,6 +47,7 @@ def load_testing_environment(options):
     # Create the testing environment object.
     environment = {
         'info': vars(options),
+        'deps': deps,
         'modules': modules,
         'paths': resources['paths']
     }

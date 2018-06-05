@@ -127,13 +127,7 @@ def main():
     # Initialize the testing environment by building all the
     # required modules to be ready to run tests.
     builder = API.builder.create(env)
-    builder.create_profile_builds()
-    builder.create_test_build()
-
-    # Run all the tests.
-    testrunner = API.testrunner.TestRunner(env)
-    testrunner.run()
-    testrunner.save()
+    builder.build_modules()
 
 
 if __name__ == '__main__':

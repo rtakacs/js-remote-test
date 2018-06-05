@@ -37,6 +37,8 @@ RESULT_PATH = os.path.join(PROJECT_ROOT, 'results')
 # ================================
 #
 
+BUILDER_PATH = os.path.join(API_PATH, 'builder')
+
 RESOURCES_PATH = os.path.join(API_PATH, 'resources')
 
 RESOURCES_JSON = os.path.join(RESOURCES_PATH, 'resources.json')

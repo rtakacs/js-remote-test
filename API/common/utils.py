@@ -18,7 +18,6 @@ import re
 import shutil
 import subprocess
 import time
-import pyrebase
 
 from API.common import console, lumpy, paths
 
@@ -30,7 +29,27 @@ class TimeoutException(Exception):
     pass
 
 
-def execute(cwd, cmd, args=None, quiet=False):
+def merge_dicts(a, b):
+    '''
+    '''
+    for key in a.keys():
+        if key in b.keys():
+            # Merge the values by its type
+            if isinstance(a[key], list):
+                a[key] = a.append(b)
+            if isinstance(b[key], str):
+                a[key] = b[key]
+
+    for key in b.keys():
+        if key in a.keys():
+            continue
+
+        a[key] = b[key]
+
+    return a
+
+
+def execute(cwd, cmd, args=None, env=None, quiet=False):
     '''
     Run the given command.
     '''
@@ -41,13 +60,18 @@ def execute(cwd, cmd, args=None, quiet=False):
     stdout = None
     stderr = None
 
+    sysenv = os.environ.copy()
+
     if quiet:
         stdout = subprocess.PIPE
         stderr = subprocess.STDOUT
 
+    if env:
+        sysenv = merge_dicts(sysenv, env)
+
     try:
         process = subprocess.Popen([cmd] + args, stdout=stdout,
-                                   stderr=stderr, cwd=cwd)
+                                   stderr=stderr, cwd=cwd, env=sysenv)
 
         output = process.communicate()[0]
         exitcode = process.returncode
