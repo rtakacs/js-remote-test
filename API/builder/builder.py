@@ -54,22 +54,27 @@ class BuilderBase(object):
         # In the first step, just open and save all the contents
         # that the build requires.
         for name in self.env['deps']:
-            print name
             filename = utils.join(paths.BUILDER_PATH, '%s.build.config' % name)
             jsondata = utils.read_json_file(filename)
             # Save the content that belongs to the appropriate device.
-            commands = jsondata[self.env['info']['device']]
-            configs[name] = commands
+            config = jsondata[self.env['info']['device']]
+            configs[name] = config
 
-            # Initialize all the modules.
-            for command in commands.get('init', []):
+        # Initialize all the modules.
+        for config in configs.values():
+            for command in config.get('init', []):
                 self.build(command)
 
-        # Loop on the saved build configurations and build the modules.
+        # Build and install the modules.
         for config in configs.values():
-            print config
             self.build(config.get('build'))
 
-            # Install the components.
-            for command in config.get('install', []):
-                self.build(command)
+            # Install the artifacts.
+            if not config.get('install', None):
+                continue
+
+            for file in config.get('install', {}).get('files', {}):
+                src = utils.join(config['install']['src-dir'], file)
+                dst = utils.join(config['install']['dst-dir'], file)
+
+                utils.copy(src, dst)
