@@ -29,7 +29,7 @@ def load_testing_environment(options):
     # Get the dependencies of the current device.
     deps = resources['targets'][options.device]
     # Update the deps list with user selected projects.
-    deps.append(options.app)
+    deps.insert(0, options.app)
 
     # Get the required module information.
     modules = {

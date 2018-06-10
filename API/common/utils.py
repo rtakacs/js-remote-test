@@ -29,49 +29,31 @@ class TimeoutException(Exception):
     pass
 
 
-def merge_dicts(a, b):
+def exec_builtin(cwd, cmd, args, env):
     '''
+    Execute the built-in command.
     '''
-    for key in a.keys():
-        if key in b.keys():
-            # Merge the values by its type
-            if isinstance(a[key], list):
-                a[key] = a.append(b)
-            if isinstance(b[key], str):
-                a[key] = b[key]
+    from API.common import builtins
 
-    for key in b.keys():
-        if key in a.keys():
-            continue
+    builtin_func = builtins.get(cmd)
 
-        a[key] = b[key]
-
-    return a
+    builtin_func(cwd, args, env)
 
 
-def execute(cwd, cmd, args=None, env=None, quiet=False):
+def exec_shell(cwd, cmd, args, env, quiet):
     '''
-    Run the given command.
+    Execute the shell command.
     '''
-
-    if args is None:
-        args = []
-
     stdout = None
     stderr = None
-
-    sysenv = os.environ.copy()
 
     if quiet:
         stdout = subprocess.PIPE
         stderr = subprocess.STDOUT
 
-    if env:
-        sysenv = merge_dicts(sysenv, env)
-
     try:
         process = subprocess.Popen([cmd] + args, stdout=stdout,
-                                   stderr=stderr, cwd=cwd, env=sysenv)
+                                   stderr=stderr, cwd=cwd, env=env)
 
         output = process.communicate()[0]
         exitcode = process.returncode
@@ -83,6 +65,28 @@ def execute(cwd, cmd, args=None, env=None, quiet=False):
 
     except Exception as e:
         console.fail('[Failed - %s %s] %s' % (cmd, ' '.join(args), str(e)))
+
+
+def execute(cwd, cmd, args=None, env=None, quiet=False):
+    '''
+    Run the given command.
+    '''
+    if args is None:
+        args = []
+
+    if env is None:
+        env = {}
+
+    # Append the user defined variables to the system ones.
+    env = merge_dicts(env, os.environ.copy())
+    
+    match = re.search(r'native\(([a-zA-Z_]+)\)', cmd)
+    # Check if native function is defined as a command.
+    if match:
+        exec_builtin(cwd, match.group(1), args, env)
+
+    else:
+        exec_shell(cwd, cmd, args, env, quiet)
 
 
 def patch(project, patch, revert=False):
@@ -109,22 +113,6 @@ def patch(project, patch, revert=False):
             console.fail('Failed to revert ' + patch)
 
 
-def generate_romfs(src, dst):
-    '''
-    Create a romfs_img from the source directory that is
-    converted to a header (byte array) file. Finally, add
-    a `const` modifier to the byte array to be the data
-    in the Read Only Memory.
-    '''
-    romfs_img = join(os.curdir, 'romfs_img')
-
-    execute(os.curdir, 'genromfs', ['-f', romfs_img, '-d', src])
-    execute(os.curdir, 'xxd', ['-i', 'romfs_img', dst])
-    execute(os.curdir, 'sed', ['-i', 's/unsigned/const\ unsigned/g', dst])
-
-    os.remove(romfs_img)
-
-
 def write_json_file(filename, data):
     '''
     Write a JSON file from the given data.
@@ -144,6 +132,29 @@ def read_json_file(filename):
     '''
     with open(filename, 'r') as json_file:
         return json.load(json_file)
+
+
+def merge_dicts(a, b):
+    '''
+    Merge two dictionaries.
+    '''
+    for key in a.keys():
+        if key not in b.keys():
+            continue
+
+        # Merge the values by its type
+        if isinstance(a[key], list):
+            a[key] = a.append(b)
+        if isinstance(b[key], str):
+            a[key] = b[key]
+
+    for key in b.keys():
+        if key in a.keys():
+            continue
+
+        a[key] = b[key]
+
+    return a
 
 
 def copy(src, dst):

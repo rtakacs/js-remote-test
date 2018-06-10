@@ -109,6 +109,9 @@ def main():
     Main function of the remote testrunner.
     '''
     options = parse_options()
+    # Get an environment object that holds all the necessary
+    # information for the build and the test.
+    env = API.load_testing_environment(options)
 
     if options.coverage:
         if options.app != 'iotjs':
@@ -120,9 +123,6 @@ def main():
             # In IoT.js the code is minimized in release mode, which will mess up the line numbers.
             options.buildtype = 'debug'
 
-    # Get an environment object that holds all the necessary
-    # information for the build and the test.
-    env = API.load_testing_environment(options)
 
     # Initialize the testing environment by building all the
     # required modules to be ready to run tests.
