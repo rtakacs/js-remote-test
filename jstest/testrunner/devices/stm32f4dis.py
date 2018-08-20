@@ -31,7 +31,7 @@ class STM32F4Device(SerialDevice):
         '''
         Flash the device.
         '''
-        if self.env['info']['no_flash']:
+        if not self.env.flash_enabled:
             return
 
         stlink = self.env['modules']['stlink']

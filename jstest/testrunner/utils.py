@@ -17,68 +17,8 @@ import json
 import os
 import re
 import time
-import pyrebase
 
 from jstest.common import console, paths, utils
-
-
-def upload_data_to_firebase(env, test_info):
-    '''
-    Upload the results of the testrunner to the Firebase database.
-    '''
-    info = env['info']
-
-    if not info['public']:
-        return
-
-    email = utils.get_environment('FIREBASE_USER')
-    password = utils.get_environment('FIREBASE_PWD')
-
-    if not (email and password):
-        return
-
-    config = {
-        'apiKey': 'AIzaSyDMgyPr0V49Rdf5ODAU9nLY02ZGEUNoxiM',
-        'authDomain': 'remote-testrunner.firebaseapp.com',
-        'databaseURL': 'https://remote-testrunner.firebaseio.com',
-        'storageBucket': 'remote-testrunner.appspot.com',
-    }
-
-    firebase = pyrebase.initialize_app(config)
-    database = firebase.database()
-    authentication = firebase.auth()
-
-    user = authentication.sign_in_with_email_and_password(email, password)
-
-    if env['info']['coverage']:
-        # Identify the place where the data should be stored.
-        database_path = 'coverage/%s/%s' % (info['app'], info['device'])
-        database.child(database_path).remove(user['idToken'])
-    else:
-        database_path = '%s/%s' % (info['app'], info['device'])
-
-    database.child(database_path).push(test_info, user['idToken'])
-
-    if env['info']['coverage']:
-        return
-
-    # Update the status images.
-    status = 'passed'
-    for test in test_info['tests']:
-        if test['result'] in ['fail', 'timeout']:
-            status = 'failed'
-            break
-
-    # The storage service allows to upload images to Firebase.
-    storage = firebase.storage()
-    # Download the corresponding status badge.
-    storage_status_path = 'status/%s.svg' % status
-    storage.child(storage_status_path).download('status.svg')
-    # Upload the status badge for the appropriate app-device pair.
-    storage_badge_path = 'status/%s/%s.svg' % (info['app'], info['device'])
-    storage.child(storage_badge_path).put('status.svg', user['idToken'])
-
-    utils.remove_file('status.svg')
 
 
 def read_test_files(env):

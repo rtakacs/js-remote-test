@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from jstest.common import utils
+import json
+
+from jstest.common import paths, utils
 
 
 def fetch_modules(env):
@@ -55,6 +57,9 @@ def patch_modules(env, revert=False):
     '''
     Modify the source code of the required modules.
     '''
+    if not env.patch_enabled:
+        return
+
     modules = env['modules']
 
     for module in modules.values():

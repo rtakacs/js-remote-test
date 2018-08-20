@@ -72,10 +72,10 @@ class SerialDevice(RemoteDevice):
         testfile = '/test/%s/%s' % (testset, test['name'])
 
         args = []
-        if not self.env['info']['no_memstat']:
+        if self.env.memstat_enabled:
             args = ['--mem-stats']
 
-        if self.device == 'artik053' and self.env['info']['coverage']:
+        if self.env.coverage_enabled and self.device == 'artik053':
             args.append('--start-debug-server')
             port = testrunner_utils.read_port_from_url(self.env['info']['coverage'])
             args.append('--debug-port %s' % port)

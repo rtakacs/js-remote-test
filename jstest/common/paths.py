@@ -33,6 +33,10 @@ BUILD_PATH = os.path.join(PROJECT_ROOT, 'build')
 
 RESULT_PATH = os.path.join(PROJECT_ROOT, 'results')
 
+TEST_JOBS = os.path.join(PROJECT_ROOT, 'jstest', 'runnable.jobs')
+
+BUILDER_MODULES_PATH = os.path.join(PROJECT_ROOT, 'jstest', 'builder', 'modules')
+
 #
 # ================================
 #

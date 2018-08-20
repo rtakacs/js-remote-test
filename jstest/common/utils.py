@@ -14,6 +14,7 @@
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -28,13 +29,25 @@ class TimeoutException(Exception):
     pass
 
 
-def execute(cwd, cmd, args=None, quiet=False, strict=True):
+def exec_builtin(cwd, cmd, args, env):
     '''
-    Run the given command.
+    Execute the built-in command.
     '''
-    if args is None:
-        args = []
+    from jstest.common import builtins
 
+    builtin_func = builtins.get(cmd)
+
+    builtin_func(cwd, args, env)
+
+    # FIXME: add quiet option to this function
+    # and handle stdout and return values.
+    return '', 0
+
+
+def exec_shell(cwd, cmd, args, env, quiet, strict):
+    '''
+    Execute the shell command.
+    '''
     stdout = None
     stderr = None
 
@@ -47,7 +60,7 @@ def execute(cwd, cmd, args=None, quiet=False, strict=True):
 
     try:
         process = subprocess.Popen([cmd] + args, stdout=stdout,
-                                   stderr=stderr, cwd=cwd)
+                                   stderr=stderr, cwd=cwd, env=env)
 
         output = process.communicate()[0]
         exitcode = process.returncode
@@ -59,6 +72,28 @@ def execute(cwd, cmd, args=None, quiet=False, strict=True):
 
     except Exception as e:
         console.fail('[Failed - %s %s] %s' % (cmd, ' '.join(args), str(e)))
+
+
+def execute(cwd, cmd, args=None, env=None, quiet=False, strict=True):
+    '''
+    Run the given command.
+    '''
+    if args is None:
+        args = []
+
+    if env is None:
+        env = {}
+
+    # Append the user defined variables to the system's one.
+    env = merge_dicts(env, os.environ.copy())
+
+    match = re.search(r'function\(([a-zA-Z_]+)\)', cmd)
+    # Check if native function is defined as a command.
+    if match:
+        return exec_builtin(cwd, match.group(1), args, env)
+
+    else:
+        return exec_shell(cwd, cmd, args, env, quiet, strict)
 
 
 def print_command(cwd, cmd, args):
@@ -108,6 +143,29 @@ def patch(project, patch_file, revert=False):
             console.fail('Failed to revert ' + patch_file)
 
 
+def merge_dicts(a, b):
+    '''
+    Merge two dictionaries.
+    '''
+    for key in a.keys():
+        if key not in b.keys():
+            continue
+
+        # Merge the values by its type
+        if isinstance(a[key], list):
+            a[key].extend(b[key])
+        if isinstance(b[key], str):
+            a[key] = b[key]
+
+    for key in b.keys():
+        if key in a.keys():
+            continue
+
+        a[key] = b[key]
+
+    return a
+
+
 def write_json_file(filename, data):
     '''
     Write a JSON file from the given data.
@@ -121,12 +179,80 @@ def write_json_file(filename, data):
         filename_p.write('\n')
 
 
-def read_json_file(filename):
+def read_json_file(filename, decoder=None):
     '''
     Read JSON file.
     '''
     with open(filename, 'r') as json_file:
-        return json.load(json_file)
+        return json.load(json_file, object_hook=decoder)
+
+
+# Device - OS mapping.
+_TARGETS = {
+    'stm32f4dis': 'arm-nuttx',
+    'artik053': 'arm-tizenrt',
+    'rpi2': 'arm-linux',
+    'artik530': 'noarch-tizen'
+}
+
+
+def resolve_symbols(string, env):
+    '''
+    Resolve the symbols to concrete values.
+    '''
+    symbol_table = {
+        'appname': env['info']['app'],
+        'device': env['info']['device'],
+        'build-type': env['info']['buildtype'],
+        'ip-addr': env['info']['ip'],
+        'gateway': env['info']['router'],
+        'netmask': env['info']['netmask'],
+        'communication': 'telnet' if env['info']['ip'] else 'serial',
+        'target': _TARGETS.get(env['info']['device']),
+        'js-remote-test': paths.PROJECT_ROOT,
+        'result-path': paths.RESULT_PATH,
+        'build-path': paths.BUILD_PATH,
+        'patches': paths.PATCHES_PATH,
+        'config': paths.CONFIG_PATH,
+        'home': paths.HOME,
+        'gbs-iotjs': paths.GBS_IOTJS_PATH,
+        'flash': env.flash_enabled,
+        'memstat': env.memstat_enabled,
+        'coverage': env.coverage_enabled,
+        'minimal-profile-build': env.minimal_profile_build,
+        'test-build': env.test_build,
+        'build-dir': env.build_directory
+    }
+
+    for symbol in re.findall('%{(.*?)}', string):
+        # First resolve the module references.
+        # For example: %{tizenrt} to %{js-remote-test}/deps/tizenrt
+        if symbol not in env['modules']:
+            continue
+
+        value = env['modules'][symbol]['src']
+        string = string.replace('%%{%s}' % symbol, str(value))
+
+    for symbol in re.findall('%{(.*?)}', string):
+        # Resolve the symbols from the symbol table.
+        value = symbol_table.get(symbol, None)
+
+        if value is None:
+            continue
+
+        string = string.replace('%%{%s}' % symbol, str(value))
+
+    return string
+
+
+def read_config_file(filename, env):
+    '''
+    Read jsson config files.
+    '''
+    with open(filename, 'r') as config_file:
+        config = config_file.read()
+
+    return json.loads(resolve_symbols(config, env))
 
 
 def copy(src, dst):

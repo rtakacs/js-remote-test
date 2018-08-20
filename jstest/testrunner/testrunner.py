@@ -41,6 +41,10 @@ class TestRunner(object):
     def __init__(self, environment):
         self.env = environment
 
+        # Do not initialize the members if testing is not enabled.
+        if not environment.test_enabled:
+            return
+
         self.device = devices.create_device(environment)
         self.results = []
         self.coverage_info = {}
@@ -55,7 +59,7 @@ class TestRunner(object):
         '''
         Main method to run IoT.js or JerryScript tests.
         '''
-        if self.env['info']['no_test']:
+        if not self.env.test_enabled:
             return
 
         reporter.report_configuration(self.env)
@@ -63,8 +67,7 @@ class TestRunner(object):
         for testset, tests in read_testsets(self.env).items():
             self.run_testset(testset, tests)
 
-
-        if self.env['info']['coverage']:
+        if self.env.coverage_enabled:
             device = self.env['info']['device']
             app_name = self.env['info']['app']
 
@@ -135,33 +138,19 @@ class TestRunner(object):
         '''
         Save the current testresults into JSON format.
         '''
-        if self.env['info']['no_test']:
+        if not self.env.test_enabled:
             return
 
-        build_file = self.env['paths']['build-json']
-        build_info = utils.read_json_file(build_file)
-
-        # Add the build information.
-        test_info = {
-                'date': build_info['last-commit-date'],
-                'bin': build_info['bin'],
-                'submodules': build_info['submodules']
-        }
-
+        results = {}
         # Specify a date named results file.
-        result_dir = self.env['paths']['result']
-        filename = utils.join(result_dir, build_info['build-date'])
+        filename = utils.join(self.env.build_directory, 'testresults.json')
 
-        if self.env['info']['coverage']:
-            # Add the coverage information.
-            test_info['coverage_info'] = self.coverage_info
+        if self.env.coverage_enabled:
+            results['coverage_info'] = self.coverage_info
             filename += '_coverage'
+
         else:
-            # Add the test results.
-            test_info['tests'] = self.results
+            results['tests'] = self.results
 
         # Save the results into the date named file.
-        utils.write_json_file(filename + '.json', test_info)
-
-        # Publish the results if necessary.
-        testrunner_utils.upload_data_to_firebase(self.env, test_info)
+        utils.write_json_file(filename, results)

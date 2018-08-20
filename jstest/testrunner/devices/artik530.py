@@ -30,7 +30,7 @@ class ARTIK530Device(SSHDevice):
         if not SSHDevice.initialize(self):
             return
 
-        if not self.env['info']['no_memstat']:
+        if self.env.memstat_enabled:
             utils.copy(paths.FREYA_CONFIG, self._build_path)
 
             # Resolve the iotjs-dirname macro in the Freya configuration file.

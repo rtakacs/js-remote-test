@@ -59,12 +59,12 @@ class SSHDevice(RemoteDevice):
         '''
         Flash the device.
         '''
-        if self.env['info']['no_flash']:
+        if not self.env.flash_enabled:
             return False
 
         # 1. Copy all the necessary files.
         self._target_app = self.env['modules']['app']
-        self._build_path = self.env['paths']['build']
+        self._build_path = self.env.build_directory
 
         test_src = self._target_app['paths']['tests']
         test_dst = utils.join(self._build_path, 'tests')
@@ -89,7 +89,7 @@ class SSHDevice(RemoteDevice):
         # Note: slash character is required after the path.
         # In this case `rsync` copies the whole folder, not
         # the subcontents to the destination.
-        src = self.env['paths']['build'] + '/'
+        src = self.env.build_directory + '/'
         dst = '%s@%s:%s' % (self.user, self.ip, self.workdir)
 
         utils.execute('.', 'rsync', rsync_flags + [src, dst])
@@ -120,10 +120,10 @@ class SSHDevice(RemoteDevice):
             iotjs = '%s/iotjs' % self.workdir
             command = template % (self.workdir, testdir, iotjs, testfile)
 
-        if self.env['info']['no_memstat']:
+        if not self.env.memstat_enabled:
             command += ' --no-memstat'
 
-        if self.env['info']['coverage'] and self.app == 'iotjs':
+        if self.env.coverage_enabled:
             port = testrunner_utils.read_port_from_url(self.env['info']['coverage'])
             command += ' --coverage-port %s' % port
 
@@ -134,7 +134,6 @@ class SSHDevice(RemoteDevice):
             client_thread.start()
 
         stdout = self.channel.exec_command(command)
-
         # Since the stdout is a JSON text, parse it.
         result = json.loads(stdout)
         # Make HTML friendly stdout.

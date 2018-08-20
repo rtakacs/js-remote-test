@@ -32,7 +32,7 @@ class ARTIK053Device(SerialDevice):
         '''
         Flash the device.
         '''
-        if self.env['info']['no_flash']:
+        if not self.env.flash_enabled:
             return
 
         tizenrt = self.env['modules']['tizenrt']
@@ -63,7 +63,7 @@ class ARTIK053Device(SerialDevice):
         self.channel.putc(command[self.app])
         self.channel.readline()
 
-        if self.env['info']['coverage'] and self.app == 'iotjs':
+        if self.env.coverage_enabled:
             # Start the client script on a different thread for coverage.
             client_thread = Thread(target=testrunner_utils.run_coverage_script,
                                    kwargs={'env': self.env})

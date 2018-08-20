@@ -17,7 +17,9 @@
 import argparse
 import os
 
-import jstest
+from jstest import Builder, Environment, TestRunner, TestResult
+from jstest import pseudo_terminal, utils, paths
+
 
 def parse_options():
     '''
@@ -135,7 +137,7 @@ def adjust_options(options):
         if options.device in ['rpi2', 'artik530']:
             options.no_test = True
         else:
-            options.device_id = jstest.emulate.pseudo_terminal.open_pseudo_terminal(options.device)
+            options.device_id = pseudo_terminal.open_pseudo_terminal(options.device)
 
     if options.coverage:
         if options.app != 'iotjs':
@@ -147,6 +149,12 @@ def adjust_options(options):
             # In IoT.js the code is minimized in release mode, which will mess up the line numbers.
             options.buildtype = 'debug'
 
+    if options.quiet:
+        os.environ['QUIET'] = '1'
+
+        if os.environ.get('VERBOSE', ''):
+            print('\n\033[1;33mWarning: --quiet option disables VERBOSE output!\033[0m\n')
+
     return options
 
 
@@ -156,32 +164,22 @@ def main():
     '''
     options = adjust_options(parse_options())
 
-    # Get an environment object that holds all the necessary
-    # information for the build and the test.
-    env = jstest.load_testing_environment(options)
+    testresult = TestResult(options)
+    # Execute all the jobs defined in the runnalble.jobs file.
+    for config in utils.read_json_file(paths.TEST_JOBS):
+        env = Environment(options, config)
 
-    if env['info']['quiet']:
-        os.environ['QUIET'] = '1'
+        builder = Builder(env)
+        builder.build()
 
-    if os.environ.get('VERBOSE', '') and env['info']['quiet']:
-        print('\n\033[1;33mWarning: --quiet option disables VERBOSE output!\033[0m\n')
-
-    # Initialize the testing environment by building all the
-    # required modules to be ready to run tests.
-    builder = jstest.builder.create(env)
-    builder.create_profile_builds()
-    builder.create_test_build()
-
-    # Run all the tests.
-    # FIXME this will have to remain in an if block until
-    # dummy devices are created for the Travis jobs.
-    if not env['info']['no_test']:
-        testrunner = jstest.testrunner.TestRunner(env)
+        testrunner = TestRunner(env)
         testrunner.run()
         testrunner.save()
 
-        if env['info']['emulate']:
-            jstest.emulate.pseudo_terminal.close_pseudo_terminal(env)
+        testresult.append(config['id'], env.build_directory)
+
+    # Upload all the results to the Firebase database.
+    testresult.upload()
 
 
 if __name__ == '__main__':

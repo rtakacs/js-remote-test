@@ -30,7 +30,7 @@ class RPi2Device(SSHDevice):
         if not SSHDevice.initialize(self):
             return
 
-        if not self.env['info']['no_memstat']:
+        if self.env.memstat_enabled:
             # Copy Freya memory measurement files.
             utils.copy(paths.FREYA_CONFIG, self._build_path)
 
