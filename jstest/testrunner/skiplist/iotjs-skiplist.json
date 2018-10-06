@@ -1,20 +1,68 @@
 {
-    "rpi2": {
-        "testsets": [],
-        "testfiles": []
-    },
-    "stm32f4dis": {
-        "testsets": [],
-        "testfiles": []
-    },
-    "artik053": {
-        "testsets": [],
-        "testfiles": [
-            { "name": "test_tls.js", "reason": "Error: SSL setup failed (no enough memory for the test)" }
-        ]
-    },
-    "artik530": {
-        "testsets": [],
-        "testfiles": []
-    }
+  "common": {
+    "testsets": [],
+    "testfiles": [
+      { "name": "test_adc.js", "reason": "need to setup test environment" },
+      { "name": "test_ble_advertisement.js", "reason": "need to setup test environment" },
+      { "name": "test_ble_setservices.js", "reason": "need to setup test environment" },
+      { "name": "test_ble_setservices_central.js", "reason": "run it with nodejs after running test_ble_setservices.js" },
+      { "name": "test_dgram_broadcast.js", "reason": "need to setup test environment" },
+      { "name": "test_dgram_multicast_membership.js", "reason": " need to setup test environment" },
+      { "name": "test_dgram_setttl_client.js", "reason": "need to setup test environment" },
+      { "name": "test_dgram_setttl_server.js", "reason": "need to setup test environment" },
+      { "name": "test_gpio_direction.js", "reason": "need to setup test environment" },
+      { "name": "test_gpio_input.js", "reason": "need to setup test environment" },
+      { "name": "test_gpio_output.js", "reason": "need to setup test environment" },
+      { "name": "test_i2c_gy30.js", "reason": "need to setup test environment" },
+      { "name": "test_process_experimental_on.js", "reason": "testrunner uses stable build" },
+      { "name": "test_pwm_async.js", "reason": "need to setup test environment" },
+      { "name": "test_pwm_sync.js", "reason": "need to setup test environment" },
+      { "name": "test_spi_buffer_async.js", "reason": "need to setup test environment" },
+      { "name": "test_spi_buffer_sync.js", "reason": "need to setup test environment" },
+      { "name": "test_spi_mcp3008.js", "reason": "need to setup test environment" },
+      { "name": "test_tizen_app_control.js", "reason": "need to setup test environment" },
+      { "name": "test_uart.js", "reason": "need to setup test environment" },
+      { "name": "issue-1101.js", "reason": "need to setup test environment" }
+    ]
+  },
+  "stm32f4dis": {
+    "testsets": [],
+    "testfiles": [
+      { "name": "test_fs_mkdir_rmdir.js", "reason": "implemented, run manually in default configuration" },
+      { "name": "test_fs_open_close.js", "reason": "not implemented for nuttx" },
+      { "name": "test_fs_rename.js", "reason": "depends on the type of the memory (testrunner uses Read Only Memory)" },
+      { "name": "test_fs_rename_sync.js", "reason": "depends on the type of the memory (testrunner uses Read Only Memory)" },
+      { "name": "test_fs_fstat.js", "reason": "not implemented for nuttx" },
+      { "name": "test_fs_fstat_sync.js", "reason": "not implemented for nuttx" },
+      { "name": "test_fs_write.js", "reason": "not implemented for nuttx" },
+      { "name": "test_fs_writefile.js", "reason": "depends on the type of the memory (testrunner uses Read Only Memory)" },
+      { "name": "test_fs_writefile_sync.js", "reason": "depends on the type of the memory (testrunner uses Read Only Memory)" },
+      { "name": "test_fs_writefile_unlink.js", "reason": "depends on the type of the memory (testrunner uses Read Only Memory)" },
+      { "name": "test_fs_writefile_unlink_sync.js", "reason": "depends on the type of the memory (testrunner uses Read Only Memory)" },
+      { "name": "test_fs_event.js", "reason": "not implemented for nuttx" },
+      { "name": "test_fs_open_read_sync_1.js", "reason": "not implemented for nuttx" },
+      { "name": "test_net_3.js", "reason": "requires too many socket descriptors and too large buffers" },
+      { "name": "test_net_7.js", "reason": "requires too many socket descriptors" },
+      { "name": "test_net_http_request_response.js", "reason": "not implemented for nuttx" }
+    ]
+  },
+  "artik053": {
+    "testsets": [],
+    "testfiles": [
+      { "name": "test_fs_fstat.js", "reason": "not implemented for TizenRT" },
+      { "name": "test_fs_fstat_sync.js", "reason": "not implemented for TizenRT" },
+      { "name": "test_tls.js", "reason": "Error: SSL setup failed (no enough memory for the test)" }
+    ]
+  },
+  "rpi2": {
+    "testsets": [],
+    "testfiles": [
+      { "name": "test_dgram_1_server_n_clients.js", "reason": "[linux]: flaky on Travis" },
+      { "name": "test_spi.js", "reason": "Different env on Linux desktop/travis/rpi" }
+    ]
+  },
+  "artik530": {
+    "testsets": [],
+    "testfiles": []
+  }
 }
