@@ -34,7 +34,7 @@ DOCKER_JSREMOTE_PATH = DOCKER_ROOT_PATH + '/js-remote-test/'
 BASE_COMMAND = ['python', '-m', 'jstest']
 RELEASE_ARG = ['--buildtype', 'release']
 DEBUG_ARG = ['--buildtype', 'debug']
-COMMON_ARGS = ['--emulate', '--no-memstat', '--quiet']
+COMMON_ARGS = ['--emulate', '--no-memstat']
 
 DEVICES = ['rpi2', 'artik530', 'artik053', 'stm32f4dis']
 
