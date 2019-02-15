@@ -25,16 +25,17 @@ TRAVIS_BUILD_PATH = os.environ['TRAVIS_BUILD_DIR']
 
 DOCKER_IMAGE_NAME = 'iotjs/js_remote_test:0.6'
 DOCKER_NAME = 'jsremote_docker'
-DOCKER_ROOT_PATH = '/root'
+DOCKER_USERNAME = 'jsuser'
+DOCKER_WORKDIR = '/home/' + DOCKER_USERNAME
 
 # The path to js-remote-test in Docker.
-DOCKER_JSREMOTE_PATH = DOCKER_ROOT_PATH + '/js-remote-test/'
+DOCKER_JSREMOTE_PATH = DOCKER_WORKDIR + '/js-remote-test/'
 
 # Commonly used commands and arguments.
 BASE_COMMAND = ['python', '-m', 'jstest']
 RELEASE_ARG = ['--buildtype', 'release']
 DEBUG_ARG = ['--buildtype', 'debug']
-COMMON_ARGS = ['--emulate', '--no-memstat', '--quiet']
+COMMON_ARGS = ['--emulate', '--no-memstat']
 
 DEVICES = ['rpi2', 'artik530', 'artik053', 'stm32f4dis']
 
@@ -71,9 +72,15 @@ def run_docker():
     '''
     Create the Docker container where we will run the builds.
     '''
-    exec_command('docker', ['run', '-dit', '--privileged', '--name', DOCKER_NAME,
+    # The user id of travis is 2000. Since most Linux system uses 1000, change the ownership of the
+    # downloaded js-remote-test folder.
+    exec_command('docker', ['run', '-dit',
+                            '--user', '2000:2000',
+                            '--name', DOCKER_NAME,
+                            '-w', DOCKER_WORKDIR,
                             '-v', '%s:%s' % (TRAVIS_BUILD_PATH, DOCKER_JSREMOTE_PATH),
                             '--env', 'PYTHONPATH=%s:$PYTHONPATH' % DOCKER_JSREMOTE_PATH,
+                            '--env', 'HOME=%s' % DOCKER_JSREMOTE_PATH,
                             DOCKER_IMAGE_NAME])
 
 
@@ -120,7 +127,7 @@ def print_command(cwd, cmd, args):
         '%s%s' % (terminal_empty, ' '.join(args))
     ]
 
-    print(' '.join(cmd_info))
+    print('travis_script> ' + ' '.join(cmd_info))
 
 
 def main():
